@@ -7,6 +7,7 @@ var express = require('express'); //Contiene funciones que permiten hacer uso de
 var app = express(); //Retorna métodos, por lo tanto hay que asignarlo a una variable para que las funciones puedan ser invocadas.
 var MongoClient = require('mongodb').MongoClient;//Se importa el servicio de base de datos de MongoDB.
 var url= 'mongodb://localhost:27017/web-bot';//Se asigna el url de ls BD a una variable para que el código se vea mejor.
+app.use(express.bodyParser());
 
 //Esta función es la presentación del Web-Bot cuyo nombre es R2D2.
 app.get('/r2d2', function(req, res){
@@ -41,14 +42,42 @@ db.collection('bot').insert(doc, function(err, records) {
 		if (err) throw err;
     else console.log("Insertion saved to bot db");
 	});
-  var skill= doc.skill;
-db.collection('ram').insert({skill}, function(err, records) {
+db.collection('ram').insert({skill:doc.skill, parameters:doc.parameters}, function(err, records) {
 		if (err) throw err;
     else console.log("Insertion saved to ram db");
 	});
 });
 });
 };
+
+app.post('/learn/api',function(req, res){
+  var date= new Date();
+  var items= req.body;
+  var data= {user:items.user, date:date, skill:items.skill, parameters:items.parameters, action:"INSERT"};
+  insertSkillToDb(data);
+  console.log(data);
+  res.send(data);
+});
+
+app.get('/exe/api/:skill/:x', function(req,res){
+  MongoClient.connect(url, function(err, db) {
+    if(err) throw err;
+    db.collection('ram', function(err, collection) {
+      collection.find({"skill":req.params.skill}).toArray(function(err, result) {
+        var parameters=(result[0].parameters);
+        var redirect= "";
+        for (var i in parameters) {
+          if (parameters[i] == 'x')
+            redirect+=req.params.x;
+          else
+            redirect+=parameters[i];
+      }
+      res.redirect(redirect);
+    });
+  });
+});
+});
+
 //Este método permite eliminar habilidades (desaprender) de la base de datos 'ram'.
 app.delete('/remove/:user/:skill',function(req, res){
   var date= new Date();
