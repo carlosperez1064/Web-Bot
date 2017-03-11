@@ -7,14 +7,14 @@ var express = require('express'); //Contiene funciones que permiten hacer uso de
 var app = express(); //Retorna métodos, por lo tanto hay que asignarlo a una variable para que las funciones puedan ser invocadas.
 var MongoClient = require('mongodb').MongoClient;//Se importa el servicio de base de datos de MongoDB.
 var url= 'mongodb://localhost:27017/web-bot';//Se asigna el url de ls BD a una variable para que el código se vea mejor.
-app.use(express.bodyParser());
+app.use(express.bodyParser());//Utilizado para tener acceso a los datos que conforman al objeto JSON en los requests hechos por el cliente.
 
 //Esta función es la presentación del Web-Bot cuyo nombre es R2D2.
 app.get('/r2d2', function(req, res){
   res.sendFile('C:/Users/Carlos/.atom/Web-Bot/index.html');
 });
 
-//Con esta ruta, el cliente podrá enseñarle al Web-Bot habilidades.
+//Con esta ruta, el cliente podrá enseñarle al Web-Bot habilidades básicas.
 app.post('/learn/:user/:skill',function(req, res){
   var date= new Date();
   var data= {user:req.params.user, skill: req.params.skill, date:date, action:"INSERT"};
@@ -28,16 +28,16 @@ MongoClient.connect(url, function(err, db) { //Se asegura de que haya una conexi
   if(err) throw err;
   else console.log("We are connected");
 
-  db.collection('bot', function(err, collection) {
+  db.collection('bot', function(err, collection) {//Se asegura de que haya conexión con la colección llamada 'bot'
   if (!err){
     console.log("All good");
   }
-  db.collection('ram', function(err, collection) {
+  db.collection('ram', function(err, collection) {//Y de que hay también contacto con la colección 'ram'
   if (!err){
     console.log("All good");
   }
 });
-//E inserta en el la colección 'bot' el registro de actividad y en 'ram' la habilidad aprendida una vez que la conexión con la bd y las colecciones tá activa.
+//E inserta en el la colección 'bot' el registro de actividad y en 'ram' la habilidad aprendida una vez que la conexión con la bd y las colecciones está activa.
 db.collection('bot').insert(doc, function(err, records) {
 		if (err) throw err;
     else console.log("Insertion saved to bot db");
@@ -49,16 +49,16 @@ db.collection('ram').insert({skill:doc.skill, parameters:doc.parameters}, functi
 });
 });
 };
-
+//El siguiente método es el encargado de hacer que el bot aprenda funciones interesantes como consulta de APIs o que aprenda a traducir en/a cualquier idioma.
 app.post('/learn/api',function(req, res){
   var date= new Date();
-  var items= req.body;
+  var items= req.body;//Se le asigna a una variable local la información incluida en el request a fin de poder utilizar dicha información de una mejor manera.
   var data= {user:items.user, date:date, skill:items.skill, parameters:items.parameters, action:"INSERT"};
-  insertSkillToDb(data);
+  insertSkillToDb(data);//Se insertan en la base de datos.
   console.log(data);
   res.send(data);
 });
-
+//Y este método se encarga de ejecutar las funciones aprendidas.
 app.get('/exe/api/:skill/:x', function(req,res){
   MongoClient.connect(url, function(err, db) {
     if(err) throw err;
@@ -137,72 +137,6 @@ app.get('/show/skills/:user',function(req, res){//Muestra el registro de todas l
         else console.log("Skill list check saved to bot db");
       });
   });
-});
-
-//Los métodos que se encuentran a partir de este punto son conocimientos que tiene el web-bot per sé, es decir, vienen incluidos con el servicio. Más abajo las explica.
-app.get('/api/googlemaps/:user/:place', function(req,res){
-  res.redirect('http://maps.googleapis.com/maps/api/geocode/json?address='+req.params.place);
-  MongoClient.connect(url, function(err, db) {
-    if(err) throw err;
-    var date= new Date();
-    var data= {user:req.params.user, date:date, action:"GOOGLEMAPS"};
-    db.collection('bot').insert(data, function(err, records) {
-        if (err) throw err;
-        else console.log(req.params.user + " just used the Googlemaps api");
-      });
-    });
-});
-//Traduce de español a inglés.
-app.get('/api/translator/:user/:string/', function(req,res){
-  res.redirect('https://translate.google.com/?hl=es/en/#es/en/'+ req.params.string);//Redirecciona al cliente a al sitio web de google.
-  MongoClient.connect(url, function(err, db) {
-    if(err) throw err;
-    var date= new Date();
-    var data= {user:req.params.user, date:date, action:"TRANSLATOR"};
-    db.collection('bot').insert(data, function(err, records) {//Guarda el registro de actividad.
-        if (err) throw err;
-        else console.log(req.params.user + " just used the translation api");
-      });
-    });
-});
-//Busca canciones en spotify.
-app.get('/api/spotify/:user/:track', function(req,res){
-  res.redirect('https://developer.spotify.com/web-api/console/get-search-item/?q='+ req.params.track+ '&type=track#complete');//Redirecciona al cliente al api de spotify
-  MongoClient.connect(url, function(err, db) {
-    if(err) throw err;
-    var date= new Date();
-    var data= {user:req.params.user, date:date, action:"SPOTIFY"};
-    db.collection('bot').insert(data, function(err, records) {//Guarda el registro de actividad.
-        if (err) throw err;
-        else console.log(req.params.user + " just used the Spotify api");
-      });
-    });
-});
-//Devuelve el plan de estudios de Ingeniería Informática de la ULACIT.
-app.get('/api/ulacit/:user', function(req,res){
-  res.redirect('http://www.ulacit.ac.cr/files/planestudio/pg300_033.pdf');//Redirecciona y devuelve el .pdf.
-  MongoClient.connect(url, function(err, db) {
-    if(err) throw err;
-    var date= new Date();
-    var data= {user:req.params.user, date:date, action:"ULACIT"};//Y guarda el registro de actividad.
-    db.collection('bot').insert(data, function(err, records) {
-        if (err) throw err;
-        else console.log(req.params.user + " just used the Ulacit api");
-      });
-    });
-});
-//Busca videos en Youtube.
-app.get('/api/youtube/:user/:search', function(req,res){
-  res.redirect('https://www.youtube.com/results?search_query=' + req.params.search);//Redirecciona al cliente a los resultados de la búsqueda.
-  MongoClient.connect(url, function(err, db) {
-    if(err) throw err;
-    var date= new Date();
-    var data= {user:req.params.user, date:date, action:"YOUTUBE"};
-    db.collection('bot').insert(data, function(err, records) {//Guarda el registro de actividad.
-        if (err) throw err;
-        else console.log(req.params.user + " just used the Youtube api");
-      });
-    });
 });
 
 app.listen(3000);
