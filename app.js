@@ -3,7 +3,7 @@ ID: NDAyMjMwNjg5 http://www.url-encode-decode.com/base64-encode-decode/?_ga=1.11
 Hecho por: Carlos Pérez Rodríguez.
 Fecha de creación: 23.02.2017
 */
-var express = require('express'); //Contiene funciones que permiten hacer uso de recursos web muy útiles y flexibles.
+var express = require('express'); //Contiene funciones que permiten hacer uso de recursos web muy útiles y flexibles para establecer comunicación con el cliente a través de los responses y requests.
 var app = express(); //Retorna métodos, por lo tanto hay que asignarlo a una variable para que las funciones puedan ser invocadas.
 var MongoClient = require('mongodb').MongoClient;//Se importa el servicio de base de datos de MongoDB.
 var url= 'mongodb://localhost:27017/web-bot';//Se asigna el url de ls BD a una variable para que el código se vea mejor.
@@ -11,7 +11,7 @@ app.use(express.bodyParser());//Utilizado para tener acceso a los datos que conf
 
 //Esta función es la presentación del Web-Bot cuyo nombre es R2D2.
 app.get('/r2d2', function(req, res){
-  res.sendFile('C:/Users/Carlos/.atom/Web-Bot/index.html');
+  res.sendfile('/index.html');
 });
 
 //Con esta ruta, el cliente podrá enseñarle al Web-Bot habilidades básicas.
